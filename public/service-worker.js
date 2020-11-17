@@ -1,4 +1,4 @@
-const CACHE_NAME = "static-cache-v2";
+const CACHE_NAME = "static-cache-v1";
 const DATA_CACHE_NAME = "data-cache-v1";
 
 const iconSizes = ["192", "512"];
@@ -7,13 +7,15 @@ const iconFiles = iconSizes.map(
 );
 
 const staticFilesToPreCache = [
+  "/",
   "/index.html",
   "/style.css",
   "/index.js",
   "/db.js",
-  "/favicon.ico",
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png",
   "/manifest.webmanifest",
-].concat(iconFiles);
+];
 
 
 // install
@@ -25,7 +27,7 @@ self.addEventListener("install", function(evt) {
     })
   );
 
-  self.skipWaiting();
+  // self.skipWaiting();
 });
 
 // activate
@@ -49,7 +51,7 @@ self.addEventListener("activate", function(evt) {
 // fetch
 self.addEventListener("fetch", function(evt) {
   const {url} = evt.request;
-  if (url.includes("/api")) {
+  if (url.includes("/api/")) {
     evt.respondWith(
       caches.open(DATA_CACHE_NAME).then(cache => {
         return fetch(evt.request)
@@ -69,10 +71,18 @@ self.addEventListener("fetch", function(evt) {
     );
   } else {
     // respond from static cache, request is not for /api/*
-    evt.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(evt.request).then(response => {
-          return response || fetch(evt.request);
+    eve.respondWith(
+      caches.match(eve.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return caches.open(DATA_CACHE_NAME).then((cache) => {
+          return fetch(eve.request).then((response) => {
+            return cache.put(eve.request, response.clone()).then(() => {
+              return response;
+            });
+          });
         });
       })
     );
