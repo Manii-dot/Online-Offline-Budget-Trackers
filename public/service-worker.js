@@ -9,7 +9,7 @@ const iconFiles = iconSizes.map(
 const staticFilesToPreCache = [
   "/",
   "/index.html",
-  "/style.css",
+  "/styles.css",
   "/index.js",
   "/db.js",
   "/icons/icon-192x192.png",
@@ -58,7 +58,7 @@ self.addEventListener("fetch", function(evt) {
           .then(response => {
             // If the response was good, clone it and store it in the cache.
             if (response.status === 200) {
-              cache.put(evt.request, response.clone());
+              cache.put(url, response.clone());
             }
 
             return response;
@@ -71,15 +71,15 @@ self.addEventListener("fetch", function(evt) {
     );
   } else {
     // respond from static cache, request is not for /api/*
-    eve.respondWith(
-      caches.match(eve.request).then((cachedResponse) => {
+    evt.respondWith(
+      caches.match(evt.request).then((cachedResponse) => {
         if (cachedResponse) {
           return cachedResponse;
         }
 
         return caches.open(DATA_CACHE_NAME).then((cache) => {
-          return fetch(eve.request).then((response) => {
-            return cache.put(eve.request, response.clone()).then(() => {
+          return fetch(evt.request).then((response) => {
+            return cache.put(evt.request, response.clone()).then(() => {
               return response;
             });
           });
